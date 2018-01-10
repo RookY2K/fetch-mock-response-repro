@@ -62,6 +62,38 @@ describe('repro', () => {
 		});
 	});
 
+	describe('Using a response configuration object with only status set', () => {
+		beforeEach(() => {
+			response = {status: 500};
+			fetchMock.get('https://www.example.com/', response);
+		});
+
+		it('Should set state with expected error message', (done) => {
+			app.handleSubmit();
+
+			expectAsync(() =>
+				expect(app.setState).toBeCalledWith({error: 'Internal Server Error'}),
+				done
+			);
+		});
+	});
+
+	describe('Using a response configuration object with status and statusText set', () => {
+		beforeEach(() => {
+			response = {status: 500, statusText: 'I failed!'};
+			fetchMock.get('https://www.example.com/', response);
+		});
+
+		it('Should set state with result and response configuration on the body of the result response', (done) => {
+			app.handleSubmit();
+
+			expectAsync(() =>
+				expect(app.setState).toBeCalledWith({result: response}),
+				done
+			);
+		});
+	});
+
 });
 
 const expectAsync = (expectation, done) => {
