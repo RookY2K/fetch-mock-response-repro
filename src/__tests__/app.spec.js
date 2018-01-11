@@ -14,86 +14,173 @@ describe('repro', () => {
 		fetchMock.restore();
 	});
 
-	describe('Setting status only in new Response init', () => {
-		beforeEach(() => {
-			response = new Response(null, {status: 500});
-			fetchMock.get('https://www.example.com/', response);
+	describe('Without overriding config', () => {
+		describe('Setting status only in new Response init', () => {
+			beforeEach(() => {
+				response = new Response(null, {status: 500});
+				fetchMock.get('https://www.example.com/', response);
+			});
+
+			it('Should set state with expected error message', (done) => {
+				app.handleSubmit();
+
+				expectAsync(() =>
+						expect(app.setState).toBeCalledWith({error: response.statusText}),
+					done
+				);
+			});
 		});
 
-		it('Should set state with expected error message', (done) => {
-			app.handleSubmit();
+		describe('Setting status and statusText in new Response init', () => {
+			beforeEach(() => {
+				response = new Response(null, {status: 500, statusText: 'I failed'});
+				fetchMock.get('https://www.example.com/', response);
+			});
 
-			expectAsync(() =>
-				expect(app.setState).toBeCalledWith({error: 'Internal Server Error'}),
-				done
-			);
+			it('Should set state with expected error message', (done) => {
+				app.handleSubmit();
+
+				expectAsync(() =>
+						expect(app.setState).toBeCalledWith({error: response.statusText}),
+					done
+				);
+			});
+		});
+
+		describe('Using status as the response', () => {
+			beforeEach(() => {
+				response = 500;
+				fetchMock.get('https://www.example.com/', response);
+			});
+
+			it('Should set state with expected error message', (done) => {
+				app.handleSubmit();
+
+				expectAsync(() =>
+						expect(app.setState).toBeCalledWith({error: 'Internal Server Error'}),
+					done
+				);
+			});
+		});
+
+		describe('Using a response configuration object with only status set', () => {
+			beforeEach(() => {
+				response = {status: 500};
+				fetchMock.get('https://www.example.com/', response);
+			});
+
+			it('Should set state with expected error message', (done) => {
+				app.handleSubmit();
+
+				expectAsync(() =>
+						expect(app.setState).toBeCalledWith({error: 'Internal Server Error'}),
+					done
+				);
+			});
+		});
+
+		describe('Using a response configuration object with status and statusText set', () => {
+			beforeEach(() => {
+				response = {status: 500, statusText: 'I failed!'};
+				fetchMock.get('https://www.example.com/', response);
+			});
+
+			it('Should set state with result and response configuration on the body of the result response', (done) => {
+				app.handleSubmit();
+
+				expectAsync(() =>
+						expect(app.setState).toBeCalledWith({result: response}),
+					done
+				);
+			});
 		});
 	});
 
-	describe('Setting status and statusText in new Response init', () => {
-		beforeEach(() => {
-			response = new Response(null, {status: 500, statusText: 'I failed'});
-			fetchMock.get('https://www.example.com/', response);
+	describe('Override config', () => {
+		beforeAll(() => {
+			fetchMock.config.Response = Response;
 		});
 
-		it('Should set state with expected error message', (done) => {
-			app.handleSubmit();
+		describe('Setting status only in new Response init', () => {
+			beforeEach(() => {
+				response = new Response(null, {status: 500});
+				fetchMock.get('https://www.example.com/', response);
+			});
 
-			expectAsync(() =>
-				expect(app.setState).toBeCalledWith({error: response.statusText}),
-				done
-			);
+			it('Should set state with expected error message', (done) => {
+				app.handleSubmit();
+
+				expectAsync(() =>
+						expect(app.setState).toBeCalledWith({error: response.statusText}),
+					done
+				);
+			});
+		});
+
+		describe('Setting status and statusText in new Response init', () => {
+			beforeEach(() => {
+				response = new Response(null, {status: 500, statusText: 'I failed'});
+				fetchMock.get('https://www.example.com/', response);
+			});
+
+			it('Should set state with expected error message', (done) => {
+				app.handleSubmit();
+
+				expectAsync(() =>
+						expect(app.setState).toBeCalledWith({error: response.statusText}),
+					done
+				);
+			});
+		});
+
+		describe('Using status as the response', () => {
+			beforeEach(() => {
+				response = 500;
+				fetchMock.get('https://www.example.com/', response);
+			});
+
+			it('Should set state with expected error message', (done) => {
+				app.handleSubmit();
+
+				expectAsync(() =>
+						expect(app.setState).toBeCalledWith({error: 'Internal Server Error'}),
+					done
+				);
+			});
+		});
+
+		describe('Using a response configuration object with only status set', () => {
+			beforeEach(() => {
+				response = {status: 500};
+				fetchMock.get('https://www.example.com/', response);
+			});
+
+			it('Should set state with expected error message', (done) => {
+				app.handleSubmit();
+
+				expectAsync(() =>
+						expect(app.setState).toBeCalledWith({error: 'Internal Server Error'}),
+					done
+				);
+			});
+		});
+
+		describe('Using a response configuration object with status and statusText set', () => {
+			beforeEach(() => {
+				response = {status: 500, statusText: 'I failed!'};
+				fetchMock.get('https://www.example.com/', response);
+			});
+
+			it('Should set state with result and response configuration on the body of the result response', (done) => {
+				app.handleSubmit();
+
+				expectAsync(() =>
+						expect(app.setState).toBeCalledWith({result: response}),
+					done
+				);
+			});
 		});
 	});
-
-	describe('Using status as the response', () => {
-		beforeEach(() => {
-			response = 500;
-			fetchMock.get('https://www.example.com/', response);
-		});
-
-		it('Should set state with expected error message', (done) => {
-			app.handleSubmit();
-
-			expectAsync(() =>
-				expect(app.setState).toBeCalledWith({error: 'Internal Server Error'}),
-				done
-			);
-		});
-	});
-
-	describe('Using a response configuration object with only status set', () => {
-		beforeEach(() => {
-			response = {status: 500};
-			fetchMock.get('https://www.example.com/', response);
-		});
-
-		it('Should set state with expected error message', (done) => {
-			app.handleSubmit();
-
-			expectAsync(() =>
-				expect(app.setState).toBeCalledWith({error: 'Internal Server Error'}),
-				done
-			);
-		});
-	});
-
-	describe('Using a response configuration object with status and statusText set', () => {
-		beforeEach(() => {
-			response = {status: 500, statusText: 'I failed!'};
-			fetchMock.get('https://www.example.com/', response);
-		});
-
-		it('Should set state with result and response configuration on the body of the result response', (done) => {
-			app.handleSubmit();
-
-			expectAsync(() =>
-				expect(app.setState).toBeCalledWith({result: response}),
-				done
-			);
-		});
-	});
-
 });
 
 const expectAsync = (expectation, done) => {
